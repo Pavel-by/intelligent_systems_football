@@ -16,5 +16,8 @@
   "bugs": {
     "url": "https://github.com/Pavel-by/intelligent_systems_football/issues"
   },
-  "homepage": "https://github.com/Pavel-by/intelligent_systems_football#readme"
+  "homepage": "https://github.com/Pavel-by/intelligent_systems_football#readme",
+  "dependencies": {
+    "yargs": "^17.3.1"
+  }
 }

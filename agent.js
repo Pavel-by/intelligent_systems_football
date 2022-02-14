@@ -1,15 +1,19 @@
 const Msg = require('./msg')
 const readline = require('readline')
+const assert = require("assert");
 
 class Agent {
     constructor() {
-        this.position = "1"
+        this.position = 'l'
         this.run = false
         this.act = null
         this.rl = readline.createInterface({
             input: process.stdin,
             output: process.stdout
         })
+        //---
+        this.time = 0
+        //---
         this.rl.on('line', (input) => {
             if (this.run) {
                 if (input === "w") this.act = {n: "dash", v: 100}
@@ -32,7 +36,7 @@ class Agent {
     }
 
     socketSend(cmd, value) {
-        this.socket.sendMsg(`(${cmd} ${value}`)
+        this.socket.sendMsg(`(${cmd} ${value})`)
     }
 
     processMsg(msg) {
@@ -49,7 +53,16 @@ class Agent {
     }
 
     analyzeEnv(msg, cmd, p) {
-        // TODO
+        if (cmd === "see")
+            this.analyzeSee(p)
+    }
+
+    analyzeSee(p) {
+        assert(typeof p[0] === "number")
+        this.time = p[0]
+        for (let i = 1; i < p.length; i++) {
+
+        }
     }
 
     sendCmd() {
