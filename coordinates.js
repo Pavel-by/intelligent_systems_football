@@ -60,9 +60,8 @@ const Flags = {
     frb: {x: 52.5, y: -34},
 
     distance(p1, p2) {
-        return Math.sqrt((p1.x - p2.x) ** 2 + (p1.y - p2.y))
+        return Math.sqrt((p1.x - p2.x) ** 2 + (p1.y - p2.y) ** 2)
     }
-
-
 }
 
+module.exports = Flags;
