@@ -17,10 +17,11 @@ class SenseBody {
         this.changeView = 0
     }
 
-    analyze(p) {
+    analyze(cmd, p) {
+        if (cmd !== "sense_body") return false
         if (!Array.isArray(p)) {
             console.log("Cannot parse body sence: unknown parameters type")
-            return
+            return false
         }
 
         for (let i of p) {
@@ -58,6 +59,7 @@ class SenseBody {
                 }
             }
         }
+        return true
     }
 }
 

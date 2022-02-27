@@ -5,7 +5,6 @@ const MIN_ANGLE = 1
 class Position {
     constructor(agent) {
         this.agent = agent
-        this.side = 'l'
         this.coords = null
         this.coordsError = null
         this.zeroVec = null
@@ -13,11 +12,8 @@ class Position {
         this.objects = null
     }
 
-    updateSide(side) {
-        this.side = side
-    }
-
-    analyzeSee(p) {
+    analyze(cmd, p) {
+        if (cmd !== "see") return false
         if (!Array.isArray(p)) {
             console.log('Invalid parameters were got in Position.analyzeSee')
             console.log(p)
@@ -31,6 +27,7 @@ class Position {
 
         this._analyzeObjInfos(p)
         this.objects = p
+        return true
     }
 
     _setupObjInfo(data) {

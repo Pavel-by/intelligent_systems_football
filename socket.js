@@ -1,7 +1,8 @@
 const dgram = require('dgram')
 const address = 'localhost'
+const port = 6000
 
-module.exports = function (agent, teamName, version) {
+module.exports = function (agent) {
     const socket = dgram.createSocket({type: 'udp4', reuseAddr: true})
     agent.setSocket(socket)
     socket.on('message', (msg, info) => {
@@ -16,9 +17,8 @@ module.exports = function (agent, teamName, version) {
         console.log(`server listening ${address.address}:${address.port}`);
     });
     socket.sendMsg = function (msg) {
-        socket.send(Buffer.from(msg), 6000, address, (err, bytes) => {
+        socket.send(Buffer.from(msg), port, address, (err, bytes) => {
             if (err) throw err
         })
     }
-    socket.sendMsg(`(init ${teamName} (version ${version}))`)
 }

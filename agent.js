@@ -3,11 +3,16 @@ const readline = require('readline')
 const assert = require("assert");
 const SenseBody = require("./sense");
 const Position = require('./position');
+const Connector = require('./connector');
+const { CallTracker } = require('assert');
+const Ticker = require('./ticker')
 
 class Agent {
     constructor() {
         this.sense = new SenseBody()
-        this.position = new Position()
+        this.position = new Position(this)
+        this.connector = new Connector(this)
+        this.ticker = new Ticker(this)
         this.run = false
         this.act = null
         this.tick = null
@@ -17,9 +22,6 @@ class Agent {
             input: process.stdin,
             output: process.stdout
         })
-        //---
-        this.time = 0
-        //---
         this.rl.on('line', (input) => {
             if (this.run) {
                 if (input === "w") this.act = { n: "dash", v: 100 }
@@ -47,18 +49,32 @@ class Agent {
 
         if (value === null || value === undefined)
             this.socket.sendMsg(`(${cmd})`)
-        else
+        else 
             this.socket.sendMsg(`(${cmd} ${value})`)
+    }
+
+    onTick() {
+        this.sendCmd()
     }
 
     processMsg(msg) {
         let data = Msg.parseMsg(msg)
         if (!data) throw new Error("Parse error\n" + msg)
-        if (data.cmd === "hear") this.run = true
-        else if (data.cmd === "init") this.initAgent(data.p)
-        else this.analyzeEnv(data.msg, data.cmd, data.p)
+        let analyzed = this.connector.analyze(data.cmd, data.p)
+        analyzed |= this.position.analyze(data.cmd, data.p)
+        analyzed |= this.sense.analyze(data.cmd, data.p)
+        analyzed |= this.ticker.analyze(data.cmd, data.p)
 
-        let newTick = this.findTick(data.p)
+        if (data.cmd === 'hear') {
+            this.run = true
+            analyzed = true
+        }
+
+        if (!analyzed) {
+            console.log(msg)
+        }
+
+        /*let newTick = this.findTick(data.p)
         if (newTick != null && this.tick != newTick) {
             if (this.position.coords !== null)
                 console.log(`${this.position.coords.x.toFixed(2)}: ${this.position.coords.y.toFixed(2)} - ${this.position.coordsError.toFixed(2)}`)
@@ -75,28 +91,13 @@ class Agent {
             this.tick = newTick
             if (this.act == null)
                 this.act = { n: 'turn', v: 10 }
-        }
-    }
-
-    findTick(p) {
-        if (p.length > 0 && Number.isInteger(p[0]))
-            return p[0]
-        return null
+        }*/
     }
 
     initAgent(p) {
         this.position.updateSide(p[0])
         this.id = p[1]
         this.uniformNumber = parseInt(p[2])
-    }
-
-    analyzeEnv(msg, cmd, p) {
-        if (cmd === "see")
-            this.position.analyzeSee(p)
-        else if (cmd === "sense_body")
-            this.sense.analyze(p)
-        else
-            console.log(`Unknown message ${msg}`)
     }
 
     sendCmd() {
