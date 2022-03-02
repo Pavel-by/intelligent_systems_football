@@ -1,1 +1,1 @@
-node ../index.js --team ally --turn --log
+node index.js --team=ally --coords=-20:0 --turn=10 --log

@@ -1,1 +1,1 @@
-node ../index.js --team enemy
+node index.js --team=enemy --coords=-20:-5
