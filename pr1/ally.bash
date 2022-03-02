@@ -1,0 +1,1 @@
+node ../index.js --team ally --turn --log
