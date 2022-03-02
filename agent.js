@@ -70,28 +70,12 @@ class Agent {
             analyzed = true
         }
 
+        if (data.cmd === "player_param" || data.cmd === "player_type" || data.cmd === "server_param")
+            analyzed = true
+
         if (!analyzed) {
             console.log(msg)
         }
-
-        /*let newTick = this.findTick(data.p)
-        if (newTick != null && this.tick != newTick) {
-            if (this.position.coords !== null)
-                console.log(`${this.position.coords.x.toFixed(2)}: ${this.position.coords.y.toFixed(2)} - ${this.position.coordsError.toFixed(2)}`)
-            if (this.position.objects !== null) {
-                for (let obj of this.position.objects) {
-                    if (obj.isBall) {
-                        console.log(`ball `, obj.coords)
-                    }
-                    if (obj.isPlayer) {
-                        console.log(`player `, obj.coords)
-                    }
-                }
-            }
-            this.tick = newTick
-            if (this.act == null)
-                this.act = { n: 'turn', v: 10 }
-        }*/
     }
 
     initAgent(p) {

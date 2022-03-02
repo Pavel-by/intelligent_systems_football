@@ -14,7 +14,6 @@ module.exports = function (agent) {
     });
     socket.on('listening', () => {
         const address = socket.address();
-        console.log(`server listening ${address.address}:${address.port}`);
     });
     socket.sendMsg = function (msg) {
         socket.send(Buffer.from(msg), port, address, (err, bytes) => {
