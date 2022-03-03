@@ -1,7 +1,5 @@
 const TICK_CMD = [
-    'see',
-    'hear',
-    'sense_body'
+    'see'
 ]
 
 class AgentTicker {
