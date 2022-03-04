@@ -1,4 +1,5 @@
 const Coords = require("./coordinates")
+const Utils = require("./utils")
 
 const MIN_ANGLE = 1
 
@@ -10,6 +11,7 @@ class Position {
         this.zeroVec = null
         this.zeroVecError = null
         this.objects = null
+        this.viewAngle = 90
     }
 
     analyze(cmd, p) {
@@ -27,7 +29,21 @@ class Position {
 
         this._analyzeObjInfos(p)
         this.objects = p
+        this._updateViewAngle()
         return true
+    }
+
+    _updateViewAngle() {
+        if (!this.objects || this.objects.length == 0) return
+        let minDir = 180
+        let maxDir = -180
+        for (let obj of this.objects) {
+            if (!obj.direction) continue
+            if (obj.direction > maxDir) maxDir = obj.direction
+            if (obj.direction < minDir) minDir = obj.direction
+        }
+        if (maxDir - minDir > this.viewAngle) 
+            this.viewAngle = maxDir - minDir
     }
 
     _setupObjInfo(data) {
@@ -118,7 +134,7 @@ class Position {
             let best_zero_vec = null, best_zero_vec_error = null
 
             for (let flag of flags) {
-                let zero_vec = this._rotateVec(this._makeNormalVec(this.coords, flag.coords), flag.direction, true)
+                let zero_vec = this._rotateVec(this.makeNormalVec(this.coords, flag.coords), flag.direction, true)
                 let zero_vec_error = this._computeZeroVecError(flags, zero_vec)
                 if (best_zero_vec_error === null || best_zero_vec_error > zero_vec_error) {
                     best_zero_vec = zero_vec
@@ -133,12 +149,12 @@ class Position {
 
             if (this.zeroVec !== null) {
                 for (let obj of infos)
-                    this._setupObjCoords(obj)
+                    this.setupObjCoords(obj)
             }
         }
     }
 
-    _setupObjCoords(obj) {
+    setupObjCoords(obj) {
         if (typeof obj !== 'object') return
         if (obj.coords != null) return
         if (this.zeroVec === null || obj.distance === null || obj.direction === null) return
@@ -155,7 +171,7 @@ class Position {
         let error = 0
         for (let flag of flags) {
             if (flag.coords === null) continue
-            let f_vec = this._makeNormalVec(this.coords, flag.coords)
+            let f_vec = this.makeNormalVec(this.coords, flag.coords)
             let test_direction = Math.acos(zero_vec.x * f_vec.x + zero_vec.y + f_vec.y)
             let visible_direction = flag.direction * (Math.PI / 180)
             error += Math.abs(test_direction - visible_direction)
@@ -163,7 +179,7 @@ class Position {
         return error
     }
 
-    _makeNormalVec(p1, p2) {
+    makeNormalVec(p1, p2) {
         let vec = {
             x: p2.x - p1.x,
             y: p2.y - p1.y
@@ -220,8 +236,8 @@ class Position {
         let vec_len = Math.sqrt(vec.x ** 2 + vec.y ** 2)
         vec.x = vec.x / vec_len
         vec.y = vec.y / vec_len
-        let cos_b = (d ** 2 + d1 ** 2 - d2 ** 2) / (2 * d * d1)
-        let sin_b = Math.sqrt(1 - cos_b **2)
+        let cos_b = Utils.clamp((d ** 2 + d1 ** 2 - d2 ** 2) / (2 * d * d1), -1, 1)
+        let sin_b = Math.sqrt(Math.abs(1 - cos_b ** 2))
         let self_vec = {
             x: vec.x * cos_b - vec.y * sin_b,
             y: vec.x * sin_b + vec.y * cos_b

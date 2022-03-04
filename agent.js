@@ -1,11 +1,9 @@
 const Msg = require('./msg')
-const readline = require('readline')
-const assert = require("assert");
 const SenseBody = require("./sense");
 const Position = require('./position');
 const Connector = require('./connector');
-const { CallTracker } = require('assert');
-const Ticker = require('./ticker')
+const Ticker = require('./ticker');
+const Controller = require('./contoller');
 
 class Agent {
     constructor() {
@@ -13,30 +11,19 @@ class Agent {
         this.position = new Position(this)
         this.connector = new Connector(this)
         this.ticker = new Ticker(this)
+        this.controller = new Controller(this)
         this.run = false
+        this.gameStatus = "before_kick_off"
         this.act = null
         this.tick = null
         this.teamname = null
         this.uniformNumber = null
-        this.rl = readline.createInterface({
-            input: process.stdin,
-            output: process.stdout
-        })
-        this.rl.on('line', (input) => {
-            if (this.run) {
-                if (input === "w") this.act = { n: "dash", v: 100 }
-                if (input === "d") this.act = { n: "turn", v: 20 }
-                if (input === "a") this.act = { n: "turn", v: -20 }
-                if (input === "s") this.act = { n: "kick", v: 100 }
-            }
-        })
     }
 
     msgGot(msg) {
         // TODO 'utf8'
         let data = msg.toString()
         this.processMsg(data)
-        this.sendCmd()
     }
 
     setSocket(socket) {
@@ -49,11 +36,12 @@ class Agent {
 
         if (value === null || value === undefined)
             this.socket.sendMsg(`(${cmd})`)
-        else 
+        else
             this.socket.sendMsg(`(${cmd} ${value})`)
     }
 
     onTick() {
+        this.controller.onTick()
         this.sendCmd()
     }
 
@@ -67,6 +55,8 @@ class Agent {
 
         if (data.cmd === 'hear') {
             this.run = true
+            if (data.p[1] === 'referee')
+                this.gameStatus = data.p[2]
             analyzed = true
         }
 
@@ -87,10 +77,13 @@ class Agent {
     sendCmd() {
         if (this.run) {
             if (this.act) {
-                if (this.act.n === "kick")
-                    this.socketSend(this.act.n, this.act.v + " 0")
-                else
+                if (typeof this.act === 'string') {
+                    this.socket.sendMsg(`(${this.act})`)
+                }
+
+                if (typeof this.act === 'object') {
                     this.socketSend(this.act.n, this.act.v)
+                }
                 this.act = null
             }
         }

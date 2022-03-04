@@ -1,6 +1,7 @@
 const Agent = require('./agent')
 const setupSocket = require('./socket')
 const clamp = (n, b, t) => Math.min(t, Math.max(b, n))
+const readline = require('readline')
 
 const yargs = require('yargs');
 const argv = yargs
@@ -8,6 +9,7 @@ const argv = yargs
     .option('coords', { type: 'string' })
     .option('turn', { type: 'number' })
     .option('log', { type: 'boolean' })
+    .option('control', { type: 'boolean' })
     .argv;
 
 let teamName = argv.team
@@ -59,4 +61,19 @@ if (argv.log) {
             }
     })
 }
+
+if (argv.control) {
+    rl = readline.createInterface({
+        input: process.stdin,
+        output: process.stdout
+    })
+    rl.on('line', (input) => {
+        if (input === "w") agent.act = { n: "dash", v: 100 }
+        else if (input === "d") agent.act = { n: "turn", v: 20 }
+        else if (input === "a") agent.act = { n: "turn", v: -20 }
+        else if (input === "s") agent.act = { n: "kick", v: 100 }
+        else if (input) agent.act = input
+    })
+}
+
 agent.connector.connect()
