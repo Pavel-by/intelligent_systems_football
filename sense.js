@@ -54,8 +54,8 @@ class SenseBody {
                 } else if (i.cmd === 'change_view') {
                     this.changeView = i.p[0]
                 } else {
-                    console.log("Unknown sense parameter")
-                    console.log(i)
+                    //console.log("Unknown sense parameter")
+                    //console.log(i)
                 }
             }
         }

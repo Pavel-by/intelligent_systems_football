@@ -4,6 +4,7 @@ const Position = require('./position');
 const Connector = require('./connector');
 const Ticker = require('./ticker');
 const Controller = require('./contoller');
+const Params = require('./params')
 
 class Agent {
     constructor() {
@@ -12,6 +13,7 @@ class Agent {
         this.connector = new Connector(this)
         this.ticker = new Ticker(this)
         this.controller = new Controller(this)
+        this.params = new Params(this)
         this.run = false
         this.gameStatus = "before_kick_off"
         this.act = null
@@ -20,10 +22,10 @@ class Agent {
         this.uniformNumber = null
     }
 
-    msgGot(msg) {
+    msgGot(msg, socketInfo) {
         // TODO 'utf8'
         let data = msg.toString()
-        this.processMsg(data)
+        this.processMsg(data, socketInfo)
     }
 
     setSocket(socket) {
@@ -45,10 +47,11 @@ class Agent {
         this.sendCmd()
     }
 
-    processMsg(msg) {
+    processMsg(msg, socketInfo) {
         let data = Msg.parseMsg(msg)
         if (!data) throw new Error("Parse error\n" + msg)
-        let analyzed = this.connector.analyze(data.cmd, data.p)
+        let analyzed = this.connector.analyze(data.cmd, data.p, socketInfo)
+        analyzed |= this.params.analyze(data.cmd, data.p)
         analyzed |= this.position.analyze(data.cmd, data.p)
         analyzed |= this.sense.analyze(data.cmd, data.p)
         analyzed |= this.ticker.analyze(data.cmd, data.p)
@@ -60,7 +63,8 @@ class Agent {
             analyzed = true
         }
 
-        if (data.cmd === "player_param" || data.cmd === "player_type" || data.cmd === "server_param")
+        if (data.cmd === "player_param" 
+            || data.cmd === "player_type")
             analyzed = true
 
         if (!analyzed) {

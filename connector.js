@@ -2,15 +2,16 @@ class AgentConnector {
     constructor(agent) {
         this.agent = agent
         this.connected = false
-        this.version = 7
+        this.version = 9
         this.onConnectCallbacks = []
     }
 
-    analyze(cmd, p) {
+    analyze(cmd, p, socketInfo) {
         if (cmd !== "init") return false
         this.agent.side = p[0]
         this.agent.id = p[1]
         this.agent.playMode = p[2]
+        this.agent.socket.port = socketInfo.port
         this.connected = true
         for (let callback of this.onConnectCallbacks) {
             callback(this.agent)

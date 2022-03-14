@@ -11,7 +11,6 @@ class Position {
         this.zeroVec = null
         this.zeroVecError = null
         this.objects = null
-        this.viewAngle = 90
     }
 
     analyze(cmd, p) {
@@ -29,21 +28,7 @@ class Position {
 
         this._analyzeObjInfos(p)
         this.objects = p
-        this._updateViewAngle()
         return true
-    }
-
-    _updateViewAngle() {
-        if (!this.objects || this.objects.length == 0) return
-        let minDir = 180
-        let maxDir = -180
-        for (let obj of this.objects) {
-            if (!obj.direction) continue
-            if (obj.direction > maxDir) maxDir = obj.direction
-            if (obj.direction < minDir) minDir = obj.direction
-        }
-        if (maxDir - minDir > this.viewAngle) 
-            this.viewAngle = maxDir - minDir
     }
 
     _setupObjInfo(data) {

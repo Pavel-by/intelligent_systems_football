@@ -11,11 +11,10 @@ class Controller {
         this.estimatedBallDirection = null
 
         this.targets = [
-            { coords: { x: -10, y: -10 }, t: 'move' },
-            { coords: { x: 10, y: 10 }, t: 'dribble' },
-            { coords: { x: 10, y: -10 }, t: 'move' },
-            { coords: { x: -10, y: 10 }, t: 'dribble' },
-            { t: 'goal' },
+            { coords: { x: -20, y: -20 }, t: 'dribble' },
+            { coords: { x: 20, y: -20 }, t: 'dribble' },
+            { coords: { x: 20, y: 20 }, t: 'dribble' },
+            { coords: { x: -20, y: 20 }, t: 'dribble' },
         ]
         this.targetIndex = 0
     }
@@ -23,7 +22,6 @@ class Controller {
     onTick() {
         if (this.agent.act != null) return
         if (this.agent.gameStatus !== 'play_on') {
-            this.targetIndex = 0
             return
         }
         let targetsTried = 0
@@ -93,7 +91,7 @@ class Controller {
 
         if (ball.distance < BALL_PRESISION) {
             this.estimatedBallDirection = target.direction
-            return this._makeKick(20, target.direction)
+            return this._makeKick(35 * power / 100, target.direction)
         }
 
         return this.constructMoveAct(ball, BALL_PRESISION, power)
