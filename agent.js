@@ -3,7 +3,6 @@ const SenseBody = require("./sense");
 const Position = require('./position');
 const Connector = require('./connector');
 const Ticker = require('./ticker');
-const Controller = require('./contoller');
 const Params = require('./params')
 const Manager = require('./manager')
 
@@ -13,7 +12,6 @@ class Agent {
         this.position = new Position(this)
         this.connector = new Connector(this)
         this.ticker = new Ticker(this)
-        this.controller = new Controller(this)
         this.params = new Params(this)
         this.manager = new Manager(this)
         this.run = false

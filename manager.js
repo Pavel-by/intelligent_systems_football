@@ -321,6 +321,7 @@ class StateTree {
     }
 
     makeCmd() {
+        this.mem.increaseAge()
         this._cmd = null
         this.callState("init")
         return this._cmd
