@@ -2,7 +2,7 @@ const utils = require('./utils')
 const coords = require('./coordinates')
 
 const MAX_MOVE_DIR_DIFF = 10
-const FLAG_PRESISION = 3.0
+const FLAG_PRESISION = 1.0
 const BALL_PRESISION = 0.5
 
 class Controller {
@@ -11,19 +11,17 @@ class Controller {
         this.estimatedBallDirection = null
 
         this.targets = [
-            { coords: { x: -20, y: -20 }, t: 'dribble' },
-            { coords: { x: 20, y: -20 }, t: 'dribble' },
-            { coords: { x: 20, y: 20 }, t: 'dribble' },
-            { coords: { x: -20, y: 20 }, t: 'dribble' },
+            { coords: { x: -30, y: -10 }, t: 'dribble' },
+            { coords: { x: 30, y: 10 }, t: 'dribble' },
         ]
         this.targetIndex = 0
     }
 
     onTick() {
         if (this.agent.act != null) return
-        if (this.agent.gameStatus !== 'play_on') {
+        /*if (this.agent.gameStatus !== 'play_on') {
             return
-        }
+        }*/
         let targetsTried = 0
         while (targetsTried < this.targets.length) {
             let act = null;
@@ -63,6 +61,9 @@ class Controller {
 
     constructMoveAct(target, presision = FLAG_PRESISION, power = 70) {
         target = this._prepareTarget(target)
+        if (this.agent.position.coordsNotEnsuredTicks > 10)
+            return this._makeTurn(90)
+
         if (target === null) {
             console.log("failed to prepare target")
             return null

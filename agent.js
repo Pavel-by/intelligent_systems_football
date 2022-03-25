@@ -5,6 +5,7 @@ const Connector = require('./connector');
 const Ticker = require('./ticker');
 const Controller = require('./contoller');
 const Params = require('./params')
+const Manager = require('./manager')
 
 class Agent {
     constructor() {
@@ -14,12 +15,32 @@ class Agent {
         this.ticker = new Ticker(this)
         this.controller = new Controller(this)
         this.params = new Params(this)
+        this.manager = new Manager(this)
         this.run = false
         this.gameStatus = "before_kick_off"
         this.act = null
+        this.lastAct = null
         this.tick = null
         this.teamname = null
         this.uniformNumber = null
+        this.isGoalie = false
+        this.goals = [
+            {
+                type: "dribble",
+                coords: {x: -30, y: -15},
+            },
+            {
+                type: "dribble",
+                coords: {x: 25, y: 20},
+            },
+            {
+                type: "dribble",
+                coords: {x: -30, y: 15},
+            },
+            {
+                type: "attack",
+            }
+        ]
     }
 
     msgGot(msg, socketInfo) {
@@ -43,7 +64,7 @@ class Agent {
     }
 
     onTick() {
-        this.controller.onTick()
+        this.manager.onTick()
         this.sendCmd()
     }
 
@@ -54,7 +75,8 @@ class Agent {
         analyzed |= this.params.analyze(data.cmd, data.p)
         analyzed |= this.position.analyze(data.cmd, data.p)
         analyzed |= this.sense.analyze(data.cmd, data.p)
-        analyzed |= this.ticker.analyze(data.cmd, data.p)
+        this.manager.analyze(data.cmd, data.p)
+        this.ticker.analyze(data.cmd, data.p)
 
         if (data.cmd === 'hear') {
             this.run = true
@@ -88,6 +110,7 @@ class Agent {
                 if (typeof this.act === 'object') {
                     this.socketSend(this.act.n, this.act.v)
                 }
+                this.lastAct = this.act
                 this.act = null
             }
         }

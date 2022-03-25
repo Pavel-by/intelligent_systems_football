@@ -1,3 +1,5 @@
+const Utils = require("./utils")
+
 class SenseBody {
     constructor() {
         this.viewQuality = ""
@@ -60,6 +62,15 @@ class SenseBody {
             }
         }
         return true
+    }
+
+    relativeSpeed() {
+        let vec = {x: 1, y: 0}
+        vec = Utils.rotateVector(vec, this.speedDirection);
+        return {
+            x: vec.x * this.speed,
+            y: vec.y * this.speed
+        }
     }
 }
 

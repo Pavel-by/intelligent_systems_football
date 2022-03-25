@@ -11,6 +11,7 @@ class Position {
         this.zeroVec = null
         this.zeroVecError = null
         this.objects = null
+        this.coordsNotEnsuredTicks = 100
     }
 
     analyze(cmd, p) {
@@ -77,7 +78,7 @@ class Position {
         if (Array.isArray(cmd) && cmd.length > 0 && cmd[0].toLowerCase() === "p") {
             data.isPlayer = true
             if (cmd.length > 1) {
-                data.teamname = cmd[1]
+                data.teamname = Utils.removeEdgeQuotes(cmd[1])
                 data.isAlly = data.teamname === this.agent.teamname
                 data.isEnemy = !data.isAlly
             }
@@ -113,7 +114,25 @@ class Position {
         if (best_coords !== null) {
             this.coords = best_coords
             this.coordsError = min_error
-        } else console.log("Failed to compute self coords")
+            this.coordsEnsured = true
+            this.coordsNotEnsuredTicks = 0
+        } else {
+            //console.log("Failed to compute self coords; estimating self coords");
+            var act = this.agent.lastAct
+            if (act.n === 'turn') {
+                let turn = act.v;
+                this.zeroVec = Utils.rotateVector(this.zeroVec, turn);
+            }
+            let relativeSpeed = this.agent.sense.relativeSpeed()
+            let zeroDirection = Utils.vectorDirection(this.zeroVec, {x:1,y:0})
+            let absoluteSpeed = Utils.rotateVector(relativeSpeed, zeroDirection)
+            this.coords = {
+                x: this.coords.x + absoluteSpeed.x,
+                y: this.coords.y + absoluteSpeed.y
+            }
+            this.coordsEnsured = false
+            this.coordsNotEnsuredTicks++
+        }
 
         if (this.coords !== null) {
             let best_zero_vec = null, best_zero_vec_error = null

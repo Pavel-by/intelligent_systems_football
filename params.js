@@ -6,6 +6,9 @@ class Params {
         this.kickable_margin = null
         this.ball_accel_max = null
         this.ball_size = null
+        this.ball_speed_max = null
+        this.player_speed_max = null
+        this.catchable_area_l = null
     }
 
     analyze(cmd, p) {
@@ -16,6 +19,9 @@ class Params {
                 'kickable_margin',
                 'ball_accel_max',
                 'ball_size',
+                'ball_speed_max',
+                'player_speed_max',
+                'catchable_area_l'
             ]
             for (let param of p) {
                 if (expected_params.includes(param.cmd))
