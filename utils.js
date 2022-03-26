@@ -1,3 +1,5 @@
+const Coords = require('./coordinates')
+
 module.exports = {
     isObject(obj) {
         return !this.isNull(obj) && typeof obj === 'object';
@@ -69,5 +71,52 @@ module.exports = {
         if (quotes.includes(s[s.length - 1]))
             end = s.length - 1
         return s.substring(start, end)
+    },
+    calculateObjectPositioning(agent, obj) {
+        let Utils = this
+        if (!Utils.isObject(obj)) return null
+        let result = {
+            coords: obj.coords,
+            direction: obj.direction,
+            distance: obj.distance,
+        }
+        if (!Utils.isObject(result.coords)) {
+            if (!Utils.isNumber(result.direction)) return null
+            if (!Utils.isNumber(result.distance)) {
+                result.distanceEstimated = true
+                result.distance = 100
+            }
+            agent.position.setupObjCoords(result)
+        }
+
+        if (Utils.isObject(result.coords) && Utils.isObject(agent.position.coords)) {
+            if (!Utils.isNumber(result.distance))
+                result.distance = Coords.distance(result.coords, agent.position.coords)
+            if (!Utils.isNumber(result.direction)) {
+                let vec = agent.position.makeNormalVec(agent.position.coords, result.coords)
+                let zeroVec = agent.position.zeroVec
+                let direction = (Math.atan2(vec.y, vec.x) - Math.atan2(zeroVec.y, zeroVec.x)) * 180 / Math.PI
+                if (direction < -180) direction += 360
+                if (direction > 180) direction -= 360
+                result.direction = -direction
+            }
+        }
+
+        if (Utils.isNumber(result.direction) && Utils.isNumber(result.distance) && Utils.isObject(result.coords))
+            return result
+
+        return null
+    },
+    calculateAllyGatesCoords(agent) {
+        return {
+            x: agent.side === 'l' ? -52.5 : 52.5,
+            y: 0
+        }
+    }, 
+    calculateEnemyGatesCoords(agent) {
+        return {
+            x: agent.side === 'l' ? 52.5 : -52.5,
+            y: 0
+        }
     }
 }

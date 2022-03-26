@@ -4,7 +4,7 @@ const Position = require('./position');
 const Connector = require('./connector');
 const Ticker = require('./ticker');
 const Params = require('./params')
-const Manager = require('./manager')
+const StateTree = require('./states')
 
 class Agent {
     constructor() {
@@ -13,7 +13,7 @@ class Agent {
         this.connector = new Connector(this)
         this.ticker = new Ticker(this)
         this.params = new Params(this)
-        this.manager = new Manager(this)
+        this.stateTree = new StateTree(this)
         this.run = false
         this.gameStatus = "before_kick_off"
         this.act = null
@@ -23,7 +23,7 @@ class Agent {
         this.uniformNumber = null
         this.isGoalie = false
         this.goals = [
-            {
+            /*{
                 type: "dribble",
                 coords: {x: -30, y: -15},
             },
@@ -34,7 +34,7 @@ class Agent {
             {
                 type: "dribble",
                 coords: {x: -30, y: 15},
-            },
+            },*/
             {
                 type: "attack",
             }
@@ -62,7 +62,7 @@ class Agent {
     }
 
     onTick() {
-        this.manager.onTick()
+        this.act = this.stateTree.makeCmd()
         this.sendCmd()
     }
 
@@ -73,7 +73,6 @@ class Agent {
         analyzed |= this.params.analyze(data.cmd, data.p)
         analyzed |= this.position.analyze(data.cmd, data.p)
         analyzed |= this.sense.analyze(data.cmd, data.p)
-        this.manager.analyze(data.cmd, data.p)
         this.ticker.analyze(data.cmd, data.p)
 
         if (data.cmd === 'hear') {
