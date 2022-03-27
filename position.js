@@ -117,7 +117,7 @@ class Position {
             this.coordsEnsured = true
             this.coordsNotEnsuredTicks = 0
         } else {
-            //console.log("Failed to compute self coords; estimating self coords");
+            if (!this.coords) return
             var act = this.agent.lastAct
             if (act.n === 'turn') {
                 let turn = act.v;

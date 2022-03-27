@@ -118,5 +118,28 @@ module.exports = {
             x: agent.side === 'l' ? 52.5 : -52.5,
             y: 0
         }
+    },
+    selectRandom(values, probs = null, exclude = []) {
+        if (!probs || probs.length != values.length) {
+            probs = Array.from({length: values.length}, (_) => 1)
+        }
+        let probsSum = probs.reduce((a, b) => a + b, 0)
+        let result = null;
+        let tries = 0
+        while (result == null && tries < 1000) {
+            tries++
+            let rnd = Math.random() * probsSum
+            let i = 0
+            for (; i < values.length && rnd > 0; i++) {
+                rnd -= probs[i]
+            }
+            i -= 1
+            if (!exclude.includes(values[i]))
+                result = values[i]
+        }
+        if (tries >= 1000) {
+            console.trace("Too many tries in selectRandom")
+        }
+        return result
     }
 }

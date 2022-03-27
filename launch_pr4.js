@@ -29,6 +29,10 @@ function launch_pr4() {
             teamName: "B",
             role: "goalie"
         },
+        {
+            teamName: "B",
+            role: "statist"
+        },
     ]
     for (let agent of Agents) {
         setup_agent(agent)
