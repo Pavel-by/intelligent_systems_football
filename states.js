@@ -5,12 +5,17 @@ class BallAnalyzer {
     constructor(agent, mem) {
         this.agent = agent
         this.mem = mem
+        this._wasKicked = false
         if (!this._hasBall() || this._getBallAge() > 0)
             this._update()
     }
 
     isReady() {
         return this._hasBall()
+    }
+
+    wasKicked() {
+        return this._wasKicked
     }
 
     estimateCoords(depth) {
@@ -26,6 +31,9 @@ class BallAnalyzer {
     }
 
     _update() {
+        if (!this.agent.hear.isPlayOn() && !this.agent.hear.isKickOffAlly()) this._clear()
+        this._wasKicked = false
+        let oldEstimate = this.isReady() ? this.estimateCoords(5) : null
         let visibleBallInfo = null
         for (let obj of this.agent.position.objects) {
             if (obj.isBall) {
@@ -40,6 +48,10 @@ class BallAnalyzer {
             velocity: this._calculateVisibleVelocity(visibleBallInfo)
         }
         this._updateBall(info)
+        if (oldEstimate !== null) {
+            let newEstimate = this.estimateCoords(5)
+            this._wasKicked = Coords.distance(oldEstimate, newEstimate) > 4
+        }
     }
 
     _calculateVisibleVelocity(visibleBallInfo) {
@@ -66,6 +78,10 @@ class BallAnalyzer {
             }
         }
         return ballAbsoluteVelocity
+    }
+
+    _clear() {
+        this.mem.delete("BallAnalyzer.ball")
     }
 
     _updateBall(ball) {
@@ -118,6 +134,13 @@ class PathAnalyzer {
         this.ball = ballAnalyzer
     }
 
+    estimateAgentShortestPath(power = 70) {
+        return this.estimateShortestPath({
+            coords: this.agent.position.coords,
+            zeroVec: this.agent.position.zeroVec,
+        }, power)
+    }
+
     estimateShortestPath(from, power = 70) {
         let depth = 0
         while (true) {
@@ -136,6 +159,10 @@ class PathAnalyzer {
     }
 
     _estimatePathTime(from, toCoords, power) {
+        if (!power || power < 30) {
+            console.trace("too small power, are you sure? " + power)
+            power = 30
+        }
         let coords = from.coords
         if (Coords.distance(coords, toCoords) < 0.5) return 0;
         let time = 0
@@ -241,6 +268,9 @@ class StateTree {
             "goalie_intercept": (t) => GoalieStates.stateGoalieIntercept(t, t.data),
             "goalie_kick_out": (t) => GoalieStates.stateGoalieKickOut(t, t.data),
             "goalie_catch": (t) => GoalieStates.stateGoalieCatch(t, t.data),
+
+            "schema": (t) => SchemaStates.stateSchema(t, t.data),
+            "schema_kick_off": (t) => SchemaStates.stateSchemaKickOff(t, t.data),
         }
         this.data = {}
     }
@@ -275,6 +305,12 @@ class StateTree {
     finishCatch(direction) {
         this.finish({ n: 'catch', v: direction })
     }
+
+    finishMove(coords) {
+        if (!Array.isArray(coords))
+            coords = [coords.x, coords.y]
+        this.finish({ n: 'move', v: coords })
+    }
 }
 
 const CommonStates = {
@@ -282,8 +318,6 @@ const CommonStates = {
         data.init ??= {}
         data.init.agent = tree.agent
         data.init.ball = new BallAnalyzer(data.init.agent, tree.mem)
-        data.init.path = new PathAnalyzer(data.init.agent, data.init.ball)
-        data.init.players = new PlayersAnalyzer(data.init.agent, data.init.path)
         data.init.params = data.init.agent.params
 
         let ball = data.init.ball
@@ -291,10 +325,12 @@ const CommonStates = {
             return tree.callState("find_ball")
         }
 
+        data.init.path = new PathAnalyzer(data.init.agent, data.init.ball)
+        data.init.players = new PlayersAnalyzer(data.init.agent, data.init.path)
         data.findBall = {
             estimatedBallCoords: ball.estimateCoords(0)
         }
-        return tree.callState("select_goal")
+        return tree.callState("schema")
     },
     stateFindBall(tree, data) {
         data.findBall ??= {}
@@ -364,6 +400,9 @@ const AttackerTeamStates = {
     stateTeamAttack(tree, data) {
         let target = Utils.calculateObjectPositioning(data.init.agent, { coords: Utils.calculateEnemyGatesCoords(data.init.agent) })
         let ball = data.init.ball
+        let hear = tree.agent.hear
+
+
 
         let agentCoords = data.init.agent.position.coords
         let kickMargin = data.init.params.kickable_margin
@@ -642,6 +681,100 @@ const GoalStates = {
 
         console.log(`unknown goal ${goal.type}`)
         return tree.callState('find_ball')
+    }
+}
+
+const SchemaStates = {
+    stateSchema(tree, data) {
+        let mem = tree.mem
+        let hear = tree.agent.hear
+
+        if (hear.isKickOffAlly()) {
+            mem.updateValue('schema.schema', 'kick_off')
+        }
+
+        if (hear.canMove()) 
+            return tree.callState('schema_move_default')
+
+        let schema = mem.getValue('schema.schema')
+
+        if (schema == 'kick_off')
+            return tree.callState('schema_kick_off')
+
+        if (!hear.isPlayOn())
+            return tree.callState('find_ball')
+
+        
+
+        return tree.callState('find_ball')
+    },
+    stateSchemaMoveDefault(tree, data) {
+        let baseCoords = null;
+        let role = tree.agent.role;
+        if (role == 'goalie') baseCoords = [-50,0]
+        if (role == 'attacker_front_middle') baseCoords = [-5,0]
+        if (role == 'attacker_front_top') baseCoords = [-5, 20]
+        if (role == 'attacker_front_bottom') baseCoords = [-5, -20]
+        let coords = tree.agent.position.coords
+        if (Coords.distance(baseCoords, coords) > 3)
+            return tree.finishMove(baseCoords)
+        return tree.callState('find_ball')
+    },
+    stateSchemaKickOff(tree, data) {
+        let mem = tree.mem
+        let ball = data.init.ball
+        let players = data.init.players
+        let path = data.init.path
+
+        let agentPath = path.estimateAgentShortestPath()
+        let allyPath = players.findShortestAlly()?.path
+
+        if (Coords.distance(ball.estimateCoords(0), { x: 0, y: 0 }) > 2) {
+            mem.delete('schema.schema')
+            return tree.callState('schema')
+        }
+
+        if (mem.getAge('schemaKickOff.targetCoords') < 20) {
+            data.move = {
+                target: {coords: mem.getValue('schemaKickOff.targetCoords')},
+                power: 100,
+            }
+            return tree.callState('move')
+        }
+
+        if (!allyPath || allyPath.time >= agentPath.time) {
+            if (Coords.distance(agentPath.fromCoords, { x: 0, y: 0 }) > 0.5) {
+                data.move = {
+                    target: {coords: { x: 0, y: 0 }},
+                }
+                return tree.callState('move')
+            }
+            let allyCoords = allyPath?.fromCoords
+            if (!allyCoords) 
+                return tree.finishTurn(90)
+            let allyPosition = Utils.calculateObjectPositioning(tree.agent, {coords: {
+                x: 0,
+                y: allyCoords.y > 0 ? 20 : -20
+            }})
+            let power = 50
+            return tree.finishKick(power, allyPosition.direction)
+        }
+
+        let agentCoords = tree.agent.position.coords
+        let targetCoords = {x: 0, y: 20}
+        if (agentCoords.y < 0) {
+            targetCoords.y *= -1
+        }
+
+        if (Coords.distance(agentCoords, targetCoords) < 2)
+            return tree.callState('find_ball')
+
+        data.move = {
+            target: {coords: targetCoords},
+            power: 100,
+        }
+        mem.updateValue('schemaKickOff.targetCoords', targetCoords)
+        return tree.callState('move')
     }
 }
 

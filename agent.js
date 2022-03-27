@@ -5,6 +5,7 @@ const Connector = require('./connector');
 const Ticker = require('./ticker');
 const Params = require('./params')
 const StateTree = require('./states')
+const Hear = require('./hear')
 
 class Agent {
     constructor() {
@@ -14,14 +15,14 @@ class Agent {
         this.ticker = new Ticker(this)
         this.params = new Params(this)
         this.stateTree = new StateTree(this)
-        this.run = false
-        this.gameStatus = "before_kick_off"
+        this.hear = new Hear(this)
+        this.role = null
         this.act = null
         this.lastAct = null
         this.tick = null
         this.teamname = null
         this.uniformNumber = null
-        this.isGoalie = false
+        this.baseCoords = { x: 0, y: 0 }
         this.goals = [
             /*{
                 type: "dribble",
@@ -64,6 +65,7 @@ class Agent {
     onTick() {
         this.act = this.stateTree.makeCmd()
         this.sendCmd()
+        this.hear.onTick()
     }
 
     processMsg(msg, socketInfo) {
@@ -73,16 +75,10 @@ class Agent {
         analyzed |= this.params.analyze(data.cmd, data.p)
         analyzed |= this.position.analyze(data.cmd, data.p)
         analyzed |= this.sense.analyze(data.cmd, data.p)
+        analyzed |= this.hear.analyze(data.cmd, data.p)
         this.ticker.analyze(data.cmd, data.p)
 
-        if (data.cmd === 'hear') {
-            this.run = true
-            if (data.p[1] === 'referee')
-                this.gameStatus = data.p[2]
-            analyzed = true
-        }
-
-        if (data.cmd === "player_param" 
+        if (data.cmd === "player_param"
             || data.cmd === "player_type")
             analyzed = true
 
@@ -98,18 +94,16 @@ class Agent {
     }
 
     sendCmd() {
-        if (this.run) {
-            if (this.act) {
-                if (typeof this.act === 'string') {
-                    this.socket.sendMsg(`(${this.act})`)
-                }
-
-                if (typeof this.act === 'object') {
-                    this.socketSend(this.act.n, this.act.v)
-                }
-                this.lastAct = this.act
-                this.act = null
+        if (this.act) {
+            if (typeof this.act === 'string') {
+                this.socket.sendMsg(`(${this.act})`)
             }
+
+            if (typeof this.act === 'object') {
+                this.socketSend(this.act.n, this.act.v)
+            }
+            this.lastAct = this.act
+            this.act = null
         }
     }
 }

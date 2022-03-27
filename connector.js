@@ -24,7 +24,7 @@ class AgentConnector {
             console.log("Cannot connect without specified teamname")
             return
         }
-        this.agent.socket.sendMsg(`(init ${this.agent.teamname} (version ${this.version})${this.agent.isGoalie ? " (goalie)" : ""})`)
+        this.agent.socket.sendMsg(`(init ${this.agent.teamname} (version ${this.version})${this.agent.role == "goalie" ? " (goalie)" : ""})`)
     }
 
     disconnect() {
