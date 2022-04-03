@@ -22,35 +22,6 @@ class Agent {
         this.tick = null
         this.teamname = null
         this.uniformNumber = null
-        this.baseCoords = { x: 0, y: 0 }
-        this.goals = [
-            /*{
-                type: "dribble",
-                coords: {x: -30, y: -15},
-            },
-            {
-                type: "dribble",
-                coords: {x: 25, y: 20},
-            },
-            {
-                type: "dribble",
-                coords: {x: -30, y: 15},
-            },*/
-            {
-                type: "attack",
-            }
-        ]
-        this.connector.executeOnConnect(() => {
-            let baseCoords = null;
-            let role = this.role;
-            if (role == 'goalie') baseCoords = [-50, 0]
-            if (role == 'attacker_front_middle') baseCoords = [-5, 0]
-            if (role == 'attacker_front_top') baseCoords = [-5, -20]
-            if (role == 'attacker_front_bottom') baseCoords = [-5, 20]
-            if (role == 'statist') baseCoords = [-52.5, -8]
-            this.act = { n: 'move', v: baseCoords }
-            this.sendCmd()
-        })
     }
 
     msgGot(msg, socketInfo) {

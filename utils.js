@@ -120,10 +120,14 @@ module.exports = {
         }
     },
     selectRandom(values, probs = null, exclude = []) {
+        if (values.length == 0) return null
         if (!probs || probs.length != values.length) {
             probs = Array.from({length: values.length}, (_) => 1)
         }
         let probsSum = probs.reduce((a, b) => a + b, 0)
+        if (probsSum == 0) {
+            console.trace("Probs sum == 0")
+        }
         let result = null;
         let tries = 0
         while (result == null && tries < 1000) {

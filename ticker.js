@@ -10,16 +10,20 @@ class AgentTicker {
     }
 
     analyze(cmd, p) {
-        if (!TICK_CMD.includes(cmd)) return false
+        /*if (p.length > 0) {
+            let newTick = p[0]
+            console.log(`${cmd} ${newTick}`)
+        }*/
+        if (!TICK_CMD.includes(cmd) && !(cmd == 'hear' && cmd[1] == 'referee')) return false
         if (Array.isArray(p) && p.length > 0 && Number.isInteger(p[0])) {
             let newTick = p[0]
-            if (this.tick != newTick) {
-                this.tick = newTick
-                this.agent.onTick()
-                for (let callback of this.callbacks) {
-                    callback(this.agent)
-                }
+            //if (this.tick != newTick) {
+            this.tick = newTick
+            this.agent.onTick()
+            for (let callback of this.callbacks) {
+                callback(this.agent)
             }
+            //}
         }
         return false
     }
