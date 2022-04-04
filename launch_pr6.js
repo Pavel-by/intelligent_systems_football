@@ -10,7 +10,7 @@ function setup_agent(props) {
 }
 
 function launch_pr6() {
-    const teamA = "Mironchik"
+    const teamA = "14_Mironchik"
     const teamB = "B";
     const Agents = [
         // team A
@@ -59,7 +59,7 @@ function launch_pr6() {
             role: "goalie"
         },
         // team B
-        {
+        /*{
             teamName: teamB,
             role: "attacker_front_bottom"
         },
@@ -102,7 +102,7 @@ function launch_pr6() {
         {
             teamName: teamB,
             role: "goalie"
-        },
+        },*/
     ]
     for (let agent of Agents) {
         setup_agent(agent)
