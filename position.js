@@ -162,13 +162,8 @@ class Position {
         if (typeof obj !== 'object') return
         if (obj.coords != null) return
         if (this.zeroVec === null || obj.distance === null || obj.direction === null) return
-        let vec = this._rotateVec(this.zeroVec, -obj.direction, true)
-        vec.x *= obj.distance
-        vec.y *= obj.distance
-        obj.coords = {
-            x: this.coords.x + vec.x,
-            y: this.coords.y + vec.y
-        }
+        obj.coords = Utils.multVector(Utils.rotateVector(this.zeroVec, obj.direction), obj.distance)
+        obj.coords = Utils.sumVector(obj.coords, this.coords)
     }
 
     _computeZeroVecError(flags, zero_vec) {

@@ -220,6 +220,8 @@ class PathAnalyzer {
         }
         while (!shortest.slow || !shortest.normal || !shortest.fast) {
             let ballCoords = this.ball.estimateCoords(depth)
+            if (Coords.distance(from.coords, ballCoords) > 0.4)
+                ballCoords = Utils.sumVector(ballCoords, Utils.multVector(Utils.normalize(Utils.vectorFromPoints(from.coords, ballCoords)), 0.5))
             if (!shortest.slow && this._estimatePathTime(from, ballCoords, SPEED_SLOW) <= depth) {
                 shortest.slow = {
                     coords: ballCoords,

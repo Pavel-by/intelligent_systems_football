@@ -25,7 +25,7 @@ class Hear {
     }
 
     isPlayOn() {
-        return this.mode == 'play_on'
+        return this.mode == 'play_on' || this.mode == `free_kick_${this.agent.side}`
     }
 
     isKickOffAlly() {
