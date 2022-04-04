@@ -668,6 +668,9 @@ const GoalieStates = {
             return tree.callState("goalie_intercept")
         }
 
+        if (tree.agent.hear.isGoalieKickAlly())
+            return tree.callState("goalie_intercept")
+
         if (ball.getAge() > 3)
             return tree.callState("find_ball")
 
@@ -698,7 +701,7 @@ const GoalieStates = {
             return tree.callState("goalie_catch")
 
         let storedCoords = mem.getAge('intercept.coords') < 10 ? mem.getValue('intercept.coords') : null
-        if (!storedCoords || Coords.distance(storedCoords, agentCoords) < 0.5) {
+        if (!storedCoords || Coords.distance(storedCoords, agentCoords) < 1) {
             let path = data.init.path
             let agentPath = path.estimateAgentShortestPath()
             storedCoords = agentPath.fast.coords
