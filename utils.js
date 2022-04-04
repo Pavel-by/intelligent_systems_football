@@ -86,6 +86,8 @@ module.exports = {
                 result.distanceEstimated = true
                 result.distance = 100
             }
+            result.coords = Utils.multVector(Utils.rotateVector(agent.position.zeroVec, result.direction), result.distance)
+            result.coords = Utils.sumVector(result.coords, agent.position.coords)
             agent.position.setupObjCoords(result)
         }
 
