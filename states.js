@@ -218,7 +218,8 @@ class PathAnalyzer {
             normal: null,
             fast: null,
         }
-        while (!shortest.slow || !shortest.normal || !shortest.fast) {
+        let LIMIT = 1000
+        while ((LIMIT--) > 0 && (!shortest.slow || !shortest.normal || !shortest.fast)) {
             let ballCoords = this.ball.estimateCoords(depth)
             if (Coords.distance(from.coords, ballCoords) > 0.4)
                 ballCoords = Utils.sumVector(ballCoords, Utils.multVector(Utils.normalize(Utils.vectorFromPoints(from.coords, ballCoords)), 0.5))
@@ -514,7 +515,11 @@ class StateTree {
 
     makeCmd() {
         this._cmd = null
-        this.callState("init")
+        try {
+            this.callState("init")
+        } catch (e) {
+            console.error(e)
+        }
         this.mem.increaseAge()
         return this._cmd
     }
@@ -797,9 +802,9 @@ const SchemaStates = {
     stateSchemaMoveDefault(tree, data) {
         let role = tree.agent.role;
         let baseCoords = DefaultCoords[role]
-        if (tree.agent.side == 'r') 
+        if (tree.agent.side == 'r')
             baseCoords = [baseCoords[0], baseCoords[1] * -1]
-        
+
         let coords = tree.agent.position.coords
         if (Coords.distance({ x: baseCoords[0], y: baseCoords[1] }, coords) > 3)
             return tree.finishMove(baseCoords)
@@ -833,14 +838,14 @@ const SchemaStates = {
         let path = data.init.path
         let players = data.init.players
 
-        const shouldIntercept = function() {
+        const shouldIntercept = function () {
             let ball = data.init.ball
             let allies = players.getAllies()
             let enemies = players.getEnemies()
             let agentPath = path.estimateAgentShortestPath()
             let nearestAlly = players.findShortestAlly()
             let nearestEnemy = players.findShortestEnemy()
-            if (!nearestAlly || nearestAlly.path.fast.time * 1.25>= agentPath.fast.time)
+            if (!nearestAlly || nearestAlly.path.fast.time * 1.25 >= agentPath.fast.time)
                 return true
             if (nearestEnemy && nearestAlly.path.fast.time >= nearestEnemy.path.fast.time) {
                 let enemyToBall = Utils.vectorFromPoints(nearestEnemy.coords, ball.estimateCoords(0))
